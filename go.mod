@@ -1,4 +1,4 @@
-module github.com/jonbrenner/gee
+module github.com/jonbrenner/botpages
 
 go 1.20
 

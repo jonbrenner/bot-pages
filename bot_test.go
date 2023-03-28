@@ -30,7 +30,7 @@ func TestCreateConfigFile(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	testConfig := Config{APIKey: "test-api-key"}
-	tempFilePath := filepath.Join(tempDir, ".gee")
+	tempFilePath := filepath.Join(tempDir, ".botpages")
 	err = createConfigFile(tempFilePath, testConfig)
 	if err != nil {
 		t.Errorf("createConfigFile returned an error: %v", err)
@@ -81,3 +81,11 @@ func TestReadCommandLineArgs(t *testing.T) {
 		}
 	}
 }
+
+// func TestMissingAPIKey(t *testing.T) {
+// 	config := Config{APIKey: ""}
+// 	_, err = initialModel("", config)
+// 	if err == nil {
+// 		t.Errorf("Expected error, but got nil")
+// 	}
+// }

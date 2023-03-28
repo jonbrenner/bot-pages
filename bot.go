@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	configFilename = ".gee"
+	configFilename = ".botpages"
 )
 
 //go:embed prompt_prefix.txt
