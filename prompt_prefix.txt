@@ -1,0 +1,19 @@
+Provide example usage of a program when the user provides a command or a description of the outcome. Use variables in place of user-provided arguments. If the program does not exist, respond with [NOT FOUND].
+
+COMMAND>find
+[EXAMPLES]
+$ find "$DIR" -name "$FILE" -type f -print
+Find files named $FILE in or below the directory $DIR.
+
+$  find . -type f -exec file '{}' \;
+Run file on every file in or below the current directory.
+
+$ find "$HOME" -mtime "$DAYS"
+Search for files in your home directory which have been modified in the last $DAYS days.
+
+$ find "$DIR" -name "$FILE" -type f -print | xargs "$COMMAND"
+Find files named $FILE in or below the directory $DIR and pass them as arguments to $COMMAND.
+[REFERENCES]
+- https://linux.die.net/man/1/find
+
+COMMAND>

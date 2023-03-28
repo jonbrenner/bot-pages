@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,11 +12,17 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
+	"github.com/sashabaranov/go-openai"
 )
 
 const (
 	configFilename = ".gee"
 )
+
+//go:embed prompt_prefix.txt
+var promptPrefix string
+
+const promptStartText = "\n[EXAMPLES]\n"
 
 type Config struct {
 	APIKey string `json:"api-key"`
@@ -35,6 +43,12 @@ func main() {
 		log.Debug("Starting...")
 	}
 
+	prompt := readCommandLineArgs(getCommandLineArgs())
+	if len(prompt) == 0 {
+		usage()
+		os.Exit(1)
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("Error retrieving home directory.", "error", err)
@@ -46,11 +60,22 @@ func main() {
 		log.Fatal("Error loading config.", "error", err)
 	}
 
-	log.Debug(config)
 	log.Debug("", "args", readCommandLineArgs(getCommandLineArgs()))
 
+	p := tea.NewProgram(initialModel(prompt, &config))
+	if _, err := p.Run(); err != nil {
+		log.Fatal("Error running program.", "error", err)
+	}
 }
 
+// Print usage information
+func usage() {
+	fmt.Printf("Usage: %s [prompt]", os.Args[0])
+}
+
+// loadConfig loads the config file from the user's home directory and returns
+// the config. If the config file does not exist, it will be created. If the
+// file permissions are not 600, a warning will be printed.
 func loadConfig(file string) (Config, error) {
 	var config Config
 
@@ -95,7 +120,7 @@ func createConfigFile(file string, config Config) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Config file written to %s\n", file)
+	log.Info("Config file written to %s\n", file)
 
 	return nil
 }
@@ -132,4 +157,56 @@ func readCommandLineArgs(args []string) string {
 
 func getCommandLineArgs() []string {
 	return os.Args[1:]
+}
+
+type Model struct {
+	config     *Config
+	Prompt     string
+	Completion string
+}
+
+func initialModel(prompt string, config *Config) Model {
+	return Model{Prompt: prompt, config: config}
+}
+
+func (m Model) Init() tea.Cmd {
+	return m.fetchCompletion
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+	case Completion:
+		m.Completion = string(msg)
+	}
+	return m, nil
+}
+
+func (m Model) View() string {
+	return fmt.Sprintf("Prompt: %s\n\nCompletion: %s", m.Prompt, m.Completion)
+}
+
+type Completion string
+
+func (m Model) fetchCompletion() tea.Msg {
+	c := openai.NewClient(m.config.APIKey)
+	ctx := context.Background()
+	log.Debug("Creating completion request.", "prompt", promptPrefix+m.Prompt+promptStartText)
+	req := openai.CompletionRequest{
+		Model:       openai.GPT3TextDavinci003,
+		MaxTokens:   1024,
+		Prompt:      promptPrefix + m.Prompt + promptStartText,
+		Stream:      false,
+		Temperature: 0.05,
+	}
+	resp, err := c.CreateCompletion(ctx, req)
+	if err != nil {
+		log.Fatal("Error creating completion.", "error", err)
+	}
+
+	return Completion(resp.Choices[0].Text)
 }
