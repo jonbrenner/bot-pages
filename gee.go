@@ -159,10 +159,12 @@ func getCommandLineArgs() []string {
 	return os.Args[1:]
 }
 
+type Completion string
+
 type Model struct {
 	config     *Config
 	Prompt     string
-	Completion string
+	Completion Completion
 }
 
 func initialModel(prompt string, config *Config) Model {
@@ -181,16 +183,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case Completion:
-		m.Completion = string(msg)
+		m.Completion = msg
 	}
 	return m, nil
 }
 
 func (m Model) View() string {
-	return fmt.Sprintf("Prompt: %s\n\nCompletion: %s", m.Prompt, m.Completion)
+	return fmt.Sprintf("%s\n", m.Completion)
 }
-
-type Completion string
 
 func (m Model) fetchCompletion() tea.Msg {
 	c := openai.NewClient(m.config.APIKey)
