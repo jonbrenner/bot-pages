@@ -10,7 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "env": {"DEBUG": "1"}
+            "env": {"DEBUG": "1"},
+            "console": "integratedTerminal", 
+            "args": ["nc"]
         }
     ]
 }
