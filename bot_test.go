@@ -82,10 +82,10 @@ func TestReadCommandLineArgs(t *testing.T) {
 	}
 }
 
-// func TestMissingAPIKey(t *testing.T) {
-// 	config := Config{APIKey: ""}
-// 	_, err = initialModel("", config)
-// 	if err == nil {
-// 		t.Errorf("Expected error, but got nil")
-// 	}
-// }
+func ValidateConfig(t *testing.T) {
+	config := Config{APIKey: ""}
+	err := validateConfig(config)
+	if err == nil {
+		t.Errorf("Expected error, but got nil")
+	}
+}

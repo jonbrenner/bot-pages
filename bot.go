@@ -90,21 +90,25 @@ func loadConfig(file string) (Config, error) {
 		}
 	} else if err != nil {
 		return config, fmt.Errorf("error checking config file: %w", err)
-	} else {
-		config, err = readConfigFromFile(file)
-		if err != nil {
-			return config, fmt.Errorf("error reading config file: %w", err)
-		}
+	}
 
-		fileInfo, err := os.Stat(file)
-		if err != nil {
-			return config, fmt.Errorf("error getting file info: %w", err)
-		}
+	config, err = readConfigFromFile(file)
+	if err != nil {
+		return config, fmt.Errorf("error reading config file: %w", err)
+	}
 
-		fileMode := fileInfo.Mode().Perm()
-		if fileMode != 0600 {
-			log.Warn("Warning: File permissions should be 600. Please update the file permissions.")
-		}
+	fileInfo, err := os.Stat(file)
+	if err != nil {
+		return config, fmt.Errorf("error getting file info: %w", err)
+	}
+
+	fileMode := fileInfo.Mode().Perm()
+	if fileMode != 0600 {
+		log.Warn("Warning: File permissions should be 600. Please update the file permissions.")
+	}
+
+	if validateConfig(config) != nil {
+		return config, fmt.Errorf("error validating config: %w", err)
 	}
 
 	return config, nil
@@ -159,6 +163,14 @@ func getCommandLineArgs() []string {
 	return os.Args[1:]
 }
 
+func validateConfig(config Config) error {
+	if len(config.APIKey) == 0 {
+		return fmt.Errorf("API Key is not set")
+	}
+
+	return nil
+}
+
 type Completion string
 
 type Model struct {
@@ -205,7 +217,8 @@ func (m Model) fetchCompletion() tea.Msg {
 	}
 	resp, err := c.CreateCompletion(ctx, req)
 	if err != nil {
-		log.Fatal("Error creating completion.", "error", err)
+		log.Info("Error creating completion.", "error", err)
+		return Completion("")
 	}
 
 	return Completion(resp.Choices[0].Text)
