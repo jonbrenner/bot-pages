@@ -34,7 +34,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 		log.SetReportCaller(true)
 		if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
-			fmt.Println("Couldn't open a file for logging:", err)
+			fmt.Fprintf(os.Stderr, "Couldn't open a file for logging: %v", err)
 			os.Exit(1)
 		} else {
 			log.SetOutput(f)
@@ -51,26 +51,29 @@ func main() {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal("Error retrieving home directory.", "error", err)
+		fmt.Fprintf(os.Stderr, "Error retrieving home directory: %v", err)
+		os.Exit(1)
 	}
 
 	configPath := filepath.Join(homeDir, configFilename)
 	config, err := loadConfig(configPath)
 	if err != nil {
-		log.Fatal("Error loading config.", "error", err)
+		fmt.Fprintf(os.Stderr, "Error loading config: %v", err)
+		os.Exit(1)
 	}
 
 	log.Debug("", "args", readCommandLineArgs(getCommandLineArgs()))
 
 	p := tea.NewProgram(initialModel(prompt, &config))
 	if _, err := p.Run(); err != nil {
-		log.Fatal("Error running program.", "error", err)
+		fmt.Fprintf(os.Stderr, "Error running program: %v", err)
+		os.Exit(1)
 	}
 }
 
 // Print usage information
 func usage() {
-	fmt.Printf("Usage: %s [prompt]", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s [prompt]", os.Args[0])
 }
 
 // loadConfig loads the config file from the user's home directory and returns
@@ -104,10 +107,10 @@ func loadConfig(file string) (Config, error) {
 
 	fileMode := fileInfo.Mode().Perm()
 	if fileMode != 0600 {
-		log.Warn("Warning: File permissions should be 600. Please update the file permissions.")
+		fmt.Fprintf(os.Stderr, "Warning: File permissions should be 600. Please update the file permissions.")
 	}
 
-	if validateConfig(config) != nil {
+	if err := validateConfig(config); err != nil {
 		return config, fmt.Errorf("error validating config: %w", err)
 	}
 
@@ -124,7 +127,7 @@ func createConfigFile(file string, config Config) error {
 	if err != nil {
 		return err
 	}
-	log.Info("Config file written to %s\n", file)
+	fmt.Fprintf(os.Stderr, "Config file written to %s\n", file)
 
 	return nil
 }
@@ -217,7 +220,7 @@ func (m Model) fetchCompletion() tea.Msg {
 	}
 	resp, err := c.CreateCompletion(ctx, req)
 	if err != nil {
-		log.Info("Error creating completion.", "error", err)
+		fmt.Fprintf(os.Stderr, "error while retrieving completion: %v", err)
 		return Completion("")
 	}
 
