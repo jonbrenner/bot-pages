@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -47,13 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	resp, err := fetchCompletion(config, prompt)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error fetching completion: %v", err)
-		os.Exit(1)
-	}
-	fmt.Printf("%s", resp)
-
+	fetchCompletion(config, prompt)
 }
 
 // Print usage information
@@ -159,9 +154,10 @@ func validateConfig(config Config) error {
 	return nil
 }
 
-func fetchCompletion(config Config, prompt string) (string, error) {
+func fetchCompletion(config Config, prompt string) {
 	c := openai.NewClient(config.APIKey)
 	ctx := context.Background()
+
 	req := openai.CompletionRequest{
 		Model:       openai.GPT3TextDavinci003,
 		MaxTokens:   1024,
@@ -169,10 +165,26 @@ func fetchCompletion(config Config, prompt string) (string, error) {
 		Stream:      false,
 		Temperature: 0.05,
 	}
-	resp, err := c.CreateCompletion(ctx, req)
-	if err != nil {
-		return "", fmt.Errorf("error while retrieving completion: %w", err)
-	}
 
-	return resp.Choices[0].Text, nil
+	stream, err := c.CreateCompletionStream(ctx, req)
+	if err != nil {
+		fmt.Printf("CompletionStream error: %v\n", err)
+		return
+	}
+	defer stream.Close()
+
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			fmt.Println("Stream finished")
+			return
+		}
+
+		if err != nil {
+			fmt.Printf("Stream error: %v\n", err)
+			return
+		}
+
+		fmt.Printf(response.Choices[0].Text)
+	}
 }
