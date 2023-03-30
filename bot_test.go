@@ -64,7 +64,7 @@ func TestCreateConfigFile(t *testing.T) {
 	}
 }
 
-func TestReadCommandLineArgs(t *testing.T) {
+func TestGetUserPrompt(t *testing.T) {
 	testCases := []struct {
 		input    []string
 		expected string
@@ -75,14 +75,14 @@ func TestReadCommandLineArgs(t *testing.T) {
 
 	// Check if args are concatenated into a single string
 	for _, tc := range testCases {
-		result := readCommandLineArgs(tc.input)
+		result := getUserPrompt(tc.input)
 		if result != tc.expected {
 			t.Errorf("Expected '%s', but got '%s' for input: %v", tc.expected, result, tc.input)
 		}
 	}
 }
 
-func ValidateConfig(t *testing.T) {
+func TestValidateConfig(t *testing.T) {
 	config := Config{APIKey: ""}
 	err := validateConfig(config)
 	if err == nil {

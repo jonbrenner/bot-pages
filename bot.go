@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -30,20 +28,7 @@ type Config struct {
 
 func main() {
 
-	if len(os.Getenv("DEBUG")) > 0 {
-		log.SetLevel(log.DebugLevel)
-		log.SetReportCaller(true)
-		if f, err := tea.LogToFile("debug.log", "debug"); err != nil {
-			fmt.Fprintf(os.Stderr, "Couldn't open a file for logging: %v", err)
-			os.Exit(1)
-		} else {
-			log.SetOutput(f)
-			defer f.Close()
-		}
-		log.Debug("Starting...")
-	}
-
-	prompt := readCommandLineArgs(getCommandLineArgs())
+	prompt := getUserPrompt(getCommandLineArgs())
 	if len(prompt) == 0 {
 		usage()
 		os.Exit(1)
@@ -62,13 +47,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Debug("", "args", readCommandLineArgs(getCommandLineArgs()))
-
-	p := tea.NewProgram(initialModel(prompt, &config))
-	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error running program: %v", err)
+	resp, err := fetchCompletion(config, prompt)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error fetching completion: %v", err)
 		os.Exit(1)
 	}
+	fmt.Printf("%s", resp)
+
 }
 
 // Print usage information
@@ -158,7 +143,7 @@ func readConfig(reader io.Reader) (Config, error) {
 	return config, nil
 }
 
-func readCommandLineArgs(args []string) string {
+func getUserPrompt(args []string) string {
 	return strings.Join(args, " ")
 }
 
@@ -174,51 +159,20 @@ func validateConfig(config Config) error {
 	return nil
 }
 
-type Completion string
-
-type Model struct {
-	config     *Config
-	Prompt     string
-	Completion Completion
-}
-
-func initialModel(prompt string, config *Config) Model {
-	return Model{Prompt: prompt, config: config}
-}
-
-func (m Model) Init() tea.Cmd {
-	return m.fetchCompletion
-}
-
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case Completion:
-		m.Completion = msg
-		return m, tea.Quit
-	}
-	return m, nil
-}
-
-func (m Model) View() string {
-	return fmt.Sprintf("%s\n", m.Completion)
-}
-
-func (m Model) fetchCompletion() tea.Msg {
-	c := openai.NewClient(m.config.APIKey)
+func fetchCompletion(config Config, prompt string) (string, error) {
+	c := openai.NewClient(config.APIKey)
 	ctx := context.Background()
-	log.Debug("Creating completion request.", "prompt", promptPrefix+m.Prompt+promptStartText)
 	req := openai.CompletionRequest{
 		Model:       openai.GPT3TextDavinci003,
 		MaxTokens:   1024,
-		Prompt:      promptPrefix + m.Prompt + promptStartText,
+		Prompt:      promptPrefix + prompt + promptStartText,
 		Stream:      false,
 		Temperature: 0.05,
 	}
 	resp, err := c.CreateCompletion(ctx, req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error while retrieving completion: %v", err)
-		return Completion("")
+		return "", fmt.Errorf("error while retrieving completion: %w", err)
 	}
 
-	return Completion(resp.Choices[0].Text)
+	return resp.Choices[0].Text, nil
 }
