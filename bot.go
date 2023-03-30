@@ -173,10 +173,11 @@ func fetchCompletion(config Config, prompt string) {
 	}
 	defer stream.Close()
 
+	fmt.Println("")
 	for {
 		response, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
-			fmt.Println("Stream finished")
+			fmt.Println("")
 			return
 		}
 

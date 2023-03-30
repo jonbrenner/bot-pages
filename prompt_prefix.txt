@@ -13,6 +13,7 @@ Search for files in your home directory which have been modified in the last $DA
 
 $ find "$DIR" -name "$FILE" -type f -print | xargs "$COMMAND"
 Find files named $FILE in or below the directory $DIR and pass them as arguments to $COMMAND.
+
 [REFERENCES]
 - https://linux.die.net/man/1/find
 
