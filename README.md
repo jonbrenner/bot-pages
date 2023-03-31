@@ -1,10 +1,8 @@
 # bot-pages
 
-## About
-
 `bot` is a simple command-line utility for looking up command usage examples. You can use ChatGPT for free, but it's really verbose. Like, so many words. Ugh. You may as well read the man page at that point. 
 
-**This tool requires an [OpenAI API key](https://platform.openai.com/account/api-keys).** (Sorry. Personal usage is inexpensive!)
+**This tool requires an [OpenAI API key](https://platform.openai.com/account/api-keys).**
 
 ## Caveat Emptor
 
