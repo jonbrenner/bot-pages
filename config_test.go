@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -19,6 +20,12 @@ func TestReadConfig(t *testing.T) {
 	expectedAPIKey := "test-api-key"
 	if config.APIKey != expectedAPIKey {
 		t.Errorf("Expected APIKey to be %s, but got %s", expectedAPIKey, config.APIKey)
+	}
+
+	malformedJSON := `{"blah`
+	_, err = readConfig(strings.NewReader(malformedJSON))
+	if err == nil {
+		t.Errorf("Expected error, but got nil")
 	}
 }
 
@@ -83,9 +90,22 @@ func TestGetUserPrompt(t *testing.T) {
 }
 
 func TestValidateConfig(t *testing.T) {
-	config := Config{APIKey: ""}
-	err := validateConfig(config)
+	err := validateConfig(Config{APIKey: ""})
 	if err == nil {
 		t.Errorf("Expected error, but got nil")
+	}
+
+	err = validateConfig(Config{APIKey: "test-api-key"})
+	if err != nil {
+		t.Errorf("Expected nil, but got error: %v", err)
+	}
+}
+
+func TestGetCommandLineArgs(t *testing.T) {
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "arg1", "arg2", "arg3"}
+	if !reflect.DeepEqual(os.Args[1:], getCommandLineArgs()) {
+		t.Errorf("Expected %v, but got %v", os.Args[1:], getCommandLineArgs())
 	}
 }
