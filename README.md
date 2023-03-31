@@ -2,13 +2,13 @@
 
 ## About
 
-`bot` is a simple command-line utility for looking up command usage examples. Sure, you could use ChatGPT for free, but it's really verbose. Like, so many words. Ugh. You may as well read the man page at that point. 
+`bot` is a simple command-line utility for looking up command usage examples. You can use ChatGPT for free, but it's really verbose. Like, so many words. Ugh. You may as well read the man page at that point. 
 
-**This tool requires an [OpenAI API key](https://platform.openai.com/account/api-keys).** Sorry. (Personal usage is inexpensive.)
+**This tool requires an [OpenAI API key](https://platform.openai.com/account/api-keys).** (Sorry. Personal usage is inexpensive!)
 
 ## Caveat Emptor
 
-This project uses OpenAI's GPT3 for completion. The commands that it suggests may be wrong or harmful or annoyingly non-existent.
+This project uses OpenAI's GPT3 model for completion. The commands that it suggests may be wrong or harmful or annoyingly non-existent.
 
 ## Build and Install
 
@@ -16,6 +16,13 @@ This project uses OpenAI's GPT3 for completion. The commands that it suggests ma
 git clone https://github.com/jonbrenner/bot-pages && cd bot-pages
 make
 sudo make install
+```
+
+or
+
+```bash
+git clone https://github.com/jonbrenner/bot-pages && cd bot-pages
+go build -o bot
 ```
 
 ## Configuration
