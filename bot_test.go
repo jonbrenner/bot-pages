@@ -30,7 +30,7 @@ func TestCreateConfigFile(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	testConfig := Config{APIKey: "test-api-key"}
-	tempFilePath := filepath.Join(tempDir, ".botpages")
+	tempFilePath := filepath.Join(tempDir, ".bot-pages")
 	err = createConfigFile(tempFilePath, testConfig)
 	if err != nil {
 		t.Errorf("createConfigFile returned an error: %v", err)

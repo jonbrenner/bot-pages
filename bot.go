@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	configFilename = ".botpages"
+	configFilename = ".bot-pages"
 )
 
 //go:embed prompt_prefix.txt
