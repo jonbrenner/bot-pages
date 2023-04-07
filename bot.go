@@ -38,7 +38,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	fetchCompletion(config, prompt)
+	stream, err := FetchCompletion(config.APIKey, CreateRequest(prompt))
+	if err != nil {
+		fmt.Printf("CompletionStream error: %v\n", err)
+		return
+	}
+	defer stream.Close()
+
+	RenderStreamResponse(os.Stdout, stream)
 }
 
 // Print usage information
@@ -46,25 +53,17 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [prompt]", os.Args[0])
 }
 
-func fetchCompletion(config Config, prompt string) {
-	c := openai.NewClient(config.APIKey)
-	ctx := context.Background()
-
-	req := openai.CompletionRequest{
+func CreateRequest(prompt string) openai.CompletionRequest {
+	return openai.CompletionRequest{
 		Model:       openai.GPT3TextDavinci003,
 		MaxTokens:   1024,
 		Prompt:      promptPrefix + prompt + promptStartText,
 		Stream:      false,
 		Temperature: 0.05,
 	}
+}
 
-	stream, err := c.CreateCompletionStream(ctx, req)
-	if err != nil {
-		fmt.Printf("CompletionStream error: %v\n", err)
-		return
-	}
-	defer stream.Close()
-
+func RenderStreamResponse(w io.Writer, stream *openai.CompletionStream) {
 	fmt.Println("")
 	for {
 		response, err := stream.Recv()
@@ -78,6 +77,12 @@ func fetchCompletion(config Config, prompt string) {
 			return
 		}
 
-		fmt.Printf(response.Choices[0].Text)
+		fmt.Fprint(w, response.Choices[0].Text)
 	}
+}
+
+func FetchCompletion(apiKey string, req openai.CompletionRequest) (*openai.CompletionStream, error) {
+	c := openai.NewClient(apiKey)
+	ctx := context.Background()
+	return c.CreateCompletionStream(ctx, req)
 }
