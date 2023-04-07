@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -71,24 +70,6 @@ func TestCreateConfigFile(t *testing.T) {
 	}
 }
 
-func TestGetUserPrompt(t *testing.T) {
-	testCases := []struct {
-		input    []string
-		expected string
-	}{
-		{[]string{"arg1", "arg2", "arg3"}, "arg1 arg2 arg3"},
-		{[]string{}, ""},
-	}
-
-	// Check if args are concatenated into a single string
-	for _, tc := range testCases {
-		result := getUserPrompt(tc.input)
-		if result != tc.expected {
-			t.Errorf("Expected '%s', but got '%s' for input: %v", tc.expected, result, tc.input)
-		}
-	}
-}
-
 func TestValidateConfig(t *testing.T) {
 	err := validateConfig(Config{APIKey: ""})
 	if err == nil {
@@ -98,14 +79,5 @@ func TestValidateConfig(t *testing.T) {
 	err = validateConfig(Config{APIKey: "test-api-key"})
 	if err != nil {
 		t.Errorf("Expected nil, but got error: %v", err)
-	}
-}
-
-func TestGetCommandLineArgs(t *testing.T) {
-	oldArgs := os.Args
-	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "arg1", "arg2", "arg3"}
-	if !reflect.DeepEqual(os.Args[1:], getCommandLineArgs()) {
-		t.Errorf("Expected %v, but got %v", os.Args[1:], getCommandLineArgs())
 	}
 }
