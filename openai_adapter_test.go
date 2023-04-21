@@ -2,12 +2,19 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"reflect"
+	"strconv"
 	"sync"
 	"testing"
 )
 
 func TestFetchCompletionStream(t *testing.T) {
+	integrationEnabled, _ := strconv.ParseBool(os.Getenv("ENABLE_INTEGRATION"))
+	if !integrationEnabled {
+		t.Skip("skipping OpenAI integration test")
+	}
+
 	expected := []string{"these", "tokens", "are", "returned"}
 	tokenResponses := make([]string, 0)
 

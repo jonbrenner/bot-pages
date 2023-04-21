@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-
-	"github.com/sashabaranov/go-openai"
 )
 
 //go:embed prompt_prefix.txt
@@ -60,19 +58,8 @@ func main() {
 	wg.Wait()
 }
 
-// Print usage information
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [prompt]", os.Args[0])
-}
-
-func CreateRequest(prompt string) openai.CompletionRequest {
-	return openai.CompletionRequest{
-		Model:       openai.GPT3TextDavinci003,
-		MaxTokens:   1024,
-		Prompt:      promptPrefix + prompt + promptStartText,
-		Stream:      false,
-		Temperature: 0.05,
-	}
 }
 
 func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {

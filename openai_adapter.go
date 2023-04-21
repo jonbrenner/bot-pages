@@ -13,6 +13,16 @@ type OpenAIAdapter struct {
 	APIKey string
 }
 
+func CreateRequest(prompt string) openai.CompletionRequest {
+	return openai.CompletionRequest{
+		Model:       openai.GPT3TextDavinci003,
+		MaxTokens:   1024,
+		Prompt:      promptPrefix + prompt + promptStartText,
+		Stream:      false,
+		Temperature: 0.05,
+	}
+}
+
 func (adapter *OpenAIAdapter) FetchCompletionStream(req openai.CompletionRequest, respCh chan<- string) error {
 	defer close(respCh)
 
