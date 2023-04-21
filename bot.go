@@ -1,13 +1,12 @@
 package main
 
 import (
-	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -38,14 +37,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	stream, err := FetchCompletion(config.APIKey, CreateRequest(prompt))
-	if err != nil {
-		fmt.Printf("CompletionStream error: %v\n", err)
-		return
-	}
-	defer stream.Close()
+	respCh := make(chan string)
 
-	RenderStreamResponse(os.Stdout, stream)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	client := &OpenAIAdapter{APIKey: config.APIKey}
+	go func() {
+		defer wg.Done()
+		err := client.FetchCompletionStream(CreateRequest(prompt), respCh)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v", err)
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		RenderCompletionStreamResponse(os.Stdout, respCh)
+	}()
+
+	wg.Wait()
 }
 
 // Print usage information
@@ -63,26 +75,8 @@ func CreateRequest(prompt string) openai.CompletionRequest {
 	}
 }
 
-func RenderStreamResponse(w io.Writer, stream *openai.CompletionStream) {
-	fmt.Println("")
-	for {
-		response, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
-			fmt.Println("")
-			return
-		}
-
-		if err != nil {
-			fmt.Printf("Stream error: %v\n", err)
-			return
-		}
-
-		fmt.Fprint(w, response.Choices[0].Text)
+func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {
+	for token := range respCh {
+		fmt.Fprint(w, token)
 	}
-}
-
-func FetchCompletion(apiKey string, req openai.CompletionRequest) (*openai.CompletionStream, error) {
-	c := openai.NewClient(apiKey)
-	ctx := context.Background()
-	return c.CreateCompletionStream(ctx, req)
 }

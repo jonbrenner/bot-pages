@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -30,5 +32,35 @@ func TestGetCommandLineArgs(t *testing.T) {
 	os.Args = []string{"cmd", "arg1", "arg2", "arg3"}
 	if !reflect.DeepEqual(os.Args[1:], getCommandLineArgs()) {
 		t.Errorf("Expected %v, but got %v", os.Args[1:], getCommandLineArgs())
+	}
+}
+
+func TestRenderCompletionStream(t *testing.T) {
+	tokens := []string{"this", "is", "a", "test"}
+	expected := "thisisatest"
+	output := &bytes.Buffer{}
+
+	respCh := make(chan string)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		defer close(respCh)
+		for _, token := range tokens {
+			respCh <- token
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		RenderCompletionStreamResponse(output, respCh)
+	}()
+
+	wg.Wait()
+
+	if output.String() != expected {
+		t.Errorf("Expected %q, but got %q", expected, output.String())
 	}
 }
