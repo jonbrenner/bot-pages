@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 const (
@@ -96,14 +95,6 @@ func readConfig(reader io.Reader) (Config, error) {
 	}
 
 	return config, nil
-}
-
-func getUserPrompt(args []string) string {
-	return strings.Join(args, " ")
-}
-
-func getCommandLineArgs() []string {
-	return os.Args[1:]
 }
 
 func validateConfig(config Config) error {

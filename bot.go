@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -60,6 +61,14 @@ func main() {
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [prompt]", os.Args[0])
+}
+
+func getUserPrompt(args []string) string {
+	return strings.Join(args, " ")
+}
+
+func getCommandLineArgs() []string {
+	return os.Args[1:]
 }
 
 func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {
