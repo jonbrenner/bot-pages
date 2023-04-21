@@ -3,7 +3,7 @@ INSTALL_DIR=/usr/local/bin
 
 .PHONY: build
 build:
-	go build -o $(BINARY_NAME)
+	CGO_ENABLED=0 go build -o $(BINARY_NAME)
 
 .PHONY: install
 install: build
