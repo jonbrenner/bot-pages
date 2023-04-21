@@ -71,7 +71,7 @@ func TestParseArgs(t *testing.T) {
 
 func TestRenderCompletionStream(t *testing.T) {
 	tokens := []string{"this", "is", "a", "test"}
-	expected := "thisisatest"
+	expected := "thisisatest\n"
 	output := &bytes.Buffer{}
 
 	respCh := make(chan string)

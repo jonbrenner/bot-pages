@@ -80,4 +80,5 @@ func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {
 	for token := range respCh {
 		fmt.Fprint(w, token)
 	}
+	fmt.Fprintln(w, "")
 }
