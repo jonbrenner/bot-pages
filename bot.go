@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -17,8 +18,8 @@ const promptStartText = "\n[EXAMPLES]\n"
 
 func main() {
 
-	prompt := getUserPrompt(getCommandLineArgs())
-	if len(prompt) == 0 {
+	args := parseArgs()
+	if len(args.Prompt) == 0 {
 		usage()
 		os.Exit(1)
 	}
@@ -44,7 +45,7 @@ func main() {
 	client := &OpenAIAdapter{APIKey: config.APIKey}
 	go func() {
 		defer wg.Done()
-		err := client.FetchCompletionStream(CreateRequest(prompt), respCh)
+		err := client.FetchCompletionStream(CreateRequest(args.Prompt), respCh)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v", err)
 			os.Exit(1)
@@ -59,16 +60,20 @@ func main() {
 	wg.Wait()
 }
 
+type Args struct {
+	Interactive bool
+	Prompt      string
+}
+
+func parseArgs() *Args {
+	interactive := flag.Bool("i", false, "Enter interactive mode (optional)")
+	flag.Parse()
+	prompt := strings.Join(flag.Args(), " ")
+	return &Args{Interactive: *interactive, Prompt: prompt}
+}
+
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [prompt]", os.Args[0])
-}
-
-func getUserPrompt(args []string) string {
-	return strings.Join(args, " ")
-}
-
-func getCommandLineArgs() []string {
-	return os.Args[1:]
 }
 
 func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {

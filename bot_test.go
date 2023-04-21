@@ -2,36 +2,70 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"os"
-	"reflect"
 	"sync"
 	"testing"
 )
 
-func TestGetUserPrompt(t *testing.T) {
+func TestParseArgs(t *testing.T) {
 	testCases := []struct {
-		input    []string
-		expected string
+		name     string
+		args     []string
+		expected Args
 	}{
-		{[]string{"arg1", "arg2", "arg3"}, "arg1 arg2 arg3"},
-		{[]string{}, ""},
+		{
+			name: "no flags",
+			args: []string{"arg1", "arg2", "arg3"},
+			expected: Args{
+				Interactive: false,
+				Prompt:      "arg1 arg2 arg3",
+			},
+		},
+		{
+			name: "interactive mode with args",
+			args: []string{"-i", "arg1", "arg2", "arg3"},
+			expected: Args{
+				Interactive: true,
+				Prompt:      "arg1 arg2 arg3",
+			},
+		},
+		{
+			name: "no flags and no args",
+			args: []string{},
+			expected: Args{
+				Interactive: false,
+				Prompt:      "",
+			},
+		},
+		{
+			name: "interactive mode without args",
+			args: []string{"-i"},
+			expected: Args{
+				Interactive: true,
+				Prompt:      "",
+			},
+		},
+		{
+			name: "-i is part of prompt when not in the first position",
+			args: []string{"arg1", "-i", "arg2"},
+			expected: Args{
+				Interactive: false,
+				Prompt:      "arg1 -i arg2",
+			},
+		},
 	}
 
-	// Check if args are concatenated into a single string
 	for _, tc := range testCases {
-		result := getUserPrompt(tc.input)
-		if result != tc.expected {
-			t.Errorf("Expected '%s', but got '%s' for input: %v", tc.expected, result, tc.input)
-		}
-	}
-}
+		t.Run(tc.name, func(t *testing.T) {
+			os.Args = append([]string{"main"}, tc.args...)
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-func TestGetCommandLineArgs(t *testing.T) {
-	oldArgs := os.Args
-	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "arg1", "arg2", "arg3"}
-	if !reflect.DeepEqual(os.Args[1:], getCommandLineArgs()) {
-		t.Errorf("Expected %v, but got %v", os.Args[1:], getCommandLineArgs())
+			args := parseArgs()
+			if args.Interactive != tc.expected.Interactive || args.Prompt != tc.expected.Prompt {
+				t.Errorf("Expected %+v, got %+v", tc.expected, args)
+			}
+		})
 	}
 }
 
