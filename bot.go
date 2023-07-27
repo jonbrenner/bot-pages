@@ -22,7 +22,7 @@ var err error
 func main() {
 
 	args := parseArgs()
-	if args.Usage || len(args.Prompt) == 0 {
+	if len(args.Prompt) == 0 {
 		usage()
 		os.Exit(1)
 	}
