@@ -1,0 +1,23 @@
+Provide example usage of configuraiton file information when the user provides the configuration file name or description. Use variable names in place of user-provided arguments. If the configuration file does not exist, respond with [NOT FOUND].
+
+COMMAND>.ssh/config
+[EXAMPLES]
+# Basic use example
+Host dev
+    HostName $HOSTNAME
+    User $USERNAME
+    Port $PORT
+
+# Advanced use example
+Host dev
+    HostName $HOSTNAME
+    User $USERNAME
+    Port $PORT
+    IdentityFile $IDENTITYFILE
+    LogLevel $LOGLEVEL
+    Compression $COMPRESSION
+
+[REFERENCES]
+- https://linuxize.com/post/using-the-ssh-config-file/
+
+COMMAND>

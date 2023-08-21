@@ -27,7 +27,7 @@ func TestFetchCompletionStream(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		err := client.FetchCompletionStream(CreateRequest("prompt"), respCh)
+		err := client.FetchCompletionStream(CreateRequest("promptPrefix", "prompt"), respCh)
 		if err != nil {
 			fmt.Println(err)
 		}
