@@ -12,6 +12,13 @@ import (
 	"sync"
 )
 
+/*
+- The "go:embed" directive must immediately precede a line containing the declaration of a single variable
+- Therefore, this program embeds all files in the current folder that match prompt_prefix*.txt into a file system variable "promptPrefixFS"
+- Then, depending on the flags passed to the command, the actual "promptPrefix" is defined by reading from "promptPrefixFS"
+- This method makes use of the embed directive while allowing the final "promptPrefix" to be conditionally defined
+*/
+
 //go:embed prompt_prefix*.txt
 var promptPrefixFS embed.FS
 
