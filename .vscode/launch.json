@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug `bot`",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {"DEBUG": "1"},
+            "console": "integratedTerminal", 
+        },
+        {
             "name": "Debug `bot nc`",
             "type": "go",
             "request": "launch",

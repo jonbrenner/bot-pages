@@ -22,17 +22,13 @@ var err error
 func main() {
 
 	args := parseArgs()
-	if len(args.Prompt) == 0 {
-		usage()
-		os.Exit(1)
-	}
 
 	var promptPrefix []byte
-	switch {
-	case args.Mode == "command":
+	switch args.Config {
+	case false:
 		promptPrefix, err = promptPrefixFS.ReadFile("prompt_prefix_command.txt")
 		errHandler(err, "Error reading prompt_prefix_command")
-	case args.Mode == "config":
+	case true:
 		promptPrefix, err = promptPrefixFS.ReadFile("prompt_prefix_config.txt")
 		errHandler(err, "Error reading prompt_prefix_config")
 	}
@@ -40,9 +36,8 @@ func main() {
 	homeDir, err := os.UserHomeDir()
 	errHandler(err, "Error retrieving home directory")
 
-	// TODO: distinguish between config for bot program and config as a command flag
-	configPath := filepath.Join(homeDir, configFilename)
-	config, err := loadConfig(configPath)
+	botConfigPath := filepath.Join(homeDir, configFilename)
+	botConfig, err := loadConfig(botConfigPath)
 	errHandler(err, "Error loading config")
 
 	respCh := make(chan string)
@@ -50,7 +45,7 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	client := &OpenAIAdapter{APIKey: config.APIKey}
+	client := &OpenAIAdapter{APIKey: botConfig.APIKey}
 	go func() {
 		defer wg.Done()
 		err := client.FetchCompletionStream(CreateRequest(string(promptPrefix), args.Prompt), respCh)
@@ -72,22 +67,34 @@ func main() {
 type Args struct {
 	Help        bool
 	Interactive bool
-	Mode        string
+	Config      bool
 	Prompt      string
 }
 
 func parseArgs() *Args {
+
 	help := flag.Bool("help", false, "Display usage options")
-	interactive := flag.Bool("i", false, "Enter interactive mode (optional)")
-	mode := flag.String("mode", "command", "Query config file details")
+	interactive := flag.Bool("i", false, "Enter interactive mode (coming soon!)")
+	config := flag.Bool("config", false, "Optional flag to operate as config bot")
 	flag.Parse()
 	prompt := strings.Join(flag.Args(), " ")
-	return &Args{Help: *help, Interactive: *interactive, Mode: *mode, Prompt: prompt}
+
+	if *help || len(os.Args) < 2 || len(prompt) == 0 {
+		Usage()
+	}
+
+	return &Args{Help: *help, Interactive: *interactive, Config: *config, Prompt: prompt}
 }
 
-func usage() {
-	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+func Usage() {
+	fmt.Println("Simple command-line utility for looking up command usage or config file examples.")
+	fmt.Println("Flags:")
 	flag.PrintDefaults()
+	fmt.Println("Example usage:")
+	fmt.Println("  bot nc")
+	fmt.Println("  bot -config cron")
+	fmt.Println("  bot -help")
+	os.Exit(1)
 }
 
 func RenderCompletionStreamResponse(w io.Writer, respCh <-chan string) {
