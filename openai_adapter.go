@@ -15,7 +15,7 @@ type OpenAIAdapter struct {
 
 func CreateRequest(prompt string) openai.CompletionRequest {
 	return openai.CompletionRequest{
-		Model:       openai.GPT3TextDavinci003,
+		Model:       openai.GPT3Dot5TurboInstruct,
 		MaxTokens:   1024,
 		Prompt:      promptPrefix + prompt + promptStartText,
 		Stream:      false,
